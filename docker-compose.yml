@@ -1,8 +1,20 @@
 version: '3'
 
 services:
-  sensor-simulator:
+  simulator-1:
     build: .
     ports:
       - "8080:8080"
+    environment:
+      - SIMULATOR_ID=simulator-1
+      - PORT=8080
+    restart: unless-stopped
+
+  simulator-2:
+    build: .
+    ports:
+      - "8081:8081"
+    environment:
+      - SIMULATOR_ID=simulator-2
+      - PORT=8081
     restart: unless-stopped 

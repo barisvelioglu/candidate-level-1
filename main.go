@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -19,11 +20,29 @@ type HealthResponse struct {
 	Timestamp string `json:"timestamp"`
 }
 
+type SimulatorInfo struct {
+	ID          string   `json:"simulator_id"`
+	Port        string   `json:"port"`
+	SensorTypes []string `json:"sensor_types"`
+	StartTime   string   `json:"start_time"`
+}
+
 var (
 	temperature float64
 	humidity    float64
 	vibration   float64
+	simulatorID string
+	startTime   time.Time
 )
+
+func init() {
+	// Initialize simulator ID from environment variable or use default
+	simulatorID = os.Getenv("SIMULATOR_ID")
+	if simulatorID == "" {
+		simulatorID = "simulator-1"
+	}
+	startTime = time.Now()
+}
 
 func updateSensorData() {
 	for {
@@ -38,7 +57,35 @@ func updateSensorData() {
 	}
 }
 
+func getPort() string {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	return port
+}
+
+func infoHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	info := SimulatorInfo{
+		ID:          simulatorID,
+		Port:        getPort(),
+		SensorTypes: []string{"temperature", "humidity", "vibration"},
+		StartTime:   startTime.Format(time.RFC3339),
+	}
+	json.NewEncoder(w).Encode(info)
+}
+
 func temperatureHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
 	data := SensorData{
 		Value: fmt.Sprintf("%.2f", temperature),
 		Unit:  "°C",
@@ -47,6 +94,11 @@ func temperatureHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func humidityHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
 	data := SensorData{
 		Value: fmt.Sprintf("%.2f", humidity),
 		Unit:  "%",
@@ -55,6 +107,11 @@ func humidityHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func vibrationHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
 	data := SensorData{
 		Value: fmt.Sprintf("%.2f", vibration),
 		Unit:  "mm/s",
@@ -63,6 +120,10 @@ func vibrationHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	response := HealthResponse{
 		Status:    "healthy",
@@ -72,20 +133,20 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	// Initialize random number generator
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	// Start sensor data simulation in background
 	go updateSensorData()
 
 	// Set up API endpoints
 	http.HandleFunc("/health", healthHandler)
+	http.HandleFunc("/info", infoHandler)
 	http.HandleFunc("/temperature", temperatureHandler)
 	http.HandleFunc("/humidity", humidityHandler)
 	http.HandleFunc("/vibration", vibrationHandler)
 
-	log.Println("Server starting on :8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	port := getPort()
+	log.Printf("Server starting on port %s with ID: %s\n", port, simulatorID)
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)
 	}
 }
