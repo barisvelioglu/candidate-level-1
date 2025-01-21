@@ -1,41 +1,42 @@
 # Candidate Task 1: Microservice Communication Optimization
 
 ## **Overview**
-Our system consists of dozens of microservices, each performing specific tasks and communicating via **HTTP-based APIs** for inter-service communication. While HTTP APIs are straightforward, well-understood, and compatible with various tools, they may introduce performance bottlenecks as the system scales. Latency, overhead from HTTP headers, and lack of built-in retry or message queuing mechanisms can impact overall performance and reliability.
+Our system consists of dozens of microservices, each responsible for specific tasks and currently communicating using **HTTP-based APIs**. While this approach is simple and widely adopted, it may introduce performance bottlenecks, especially as our system scales. Latency, additional overhead, and challenges with reliability and scalability are potential limitations of the current implementation.
 
-Your task is to analyze the current **HTTP-based communication approach**, identify its limitations, and explore alternative solutions that could enhance performance, scalability, and reliability.
+Your task is to evaluate the current **HTTP-based communication approach**, identify its weaknesses, and research alternative communication methods or protocols that could better meet our performance, scalability, and reliability needs. 
 
 ---
 
 ## **Key Expectations**
-1. **Current Approach Analysis**: Evaluate the pros and cons of our existing HTTP-based API communication.
-   - Strengths: Simplicity, stateless nature, and compatibility with tools like REST frameworks and API gateways.
-   - Weaknesses: Higher latency due to repeated handshakes, lack of optimized binary protocols, potential scalability issues with synchronous requests, and difficulties in ensuring reliability during failures.
+1. **Current Approach Analysis**: 
+   - Strengths: Simplicity, widespread understanding, and compatibility with existing tools and frameworks.
+   - Weaknesses: Potential latency issues due to repeated connections and handshakes, overhead from headers, and the synchronous nature that might not handle traffic spikes efficiently. Reliability mechanisms like retries and error handling may require custom implementation.
 
-2. **Alternative Solutions**: Research and compare alternative communication protocols or approaches, such as:
-   - **gRPC**: A high-performance, open-source RPC framework using HTTP/2 and Protocol Buffers.
-   - **Message Brokers (e.g., NATS, Kafka, RabbitMQ)**: Asynchronous communication for event-driven architectures.
-   - **Service Mesh (e.g., Istio)**: For managing service-to-service communication with advanced features like retries and observability.
+2. **Alternative Solutions**:
+   - Research and explore alternative communication approaches or protocols.
+   - Compare the benefits and trade-offs of these alternatives.
+   - Consider aspects like reduced latency, improved performance, scalability for high-traffic environments, and reliability features like automatic retries or better fault tolerance.
 
-3. **Recommendation**: Based on your findings, recommend the most suitable solution for our needs.
-   - Focus on performance (e.g., lower latency, binary protocols), scalability (e.g., better handling of traffic spikes), and reliability (e.g., automatic retries, fault tolerance).
-   - Justify your recommendation with clear benefits and trade-offs.
+3. **Recommendation**:
+   - Based on your analysis, propose a solution that you believe best addresses the identified challenges.
+   - Justify why this solution is most suitable for our needs in terms of performance, scalability, and reliability.
 
-4. **Implementation Plan**: Provide a high-level plan for adopting the recommended solution. Highlight:
-   - Changes needed in existing services.
-   - Deployment strategy and incremental rollout.
-   - Potential risks, such as compatibility issues, learning curves, or migration complexity.
+4. **Implementation Plan**:
+   - Provide a high-level plan to implement the recommended solution.
+   - Identify necessary changes to the current services and a strategy for transitioning without disrupting the system.
+   - Highlight potential risks, such as compatibility issues, complexity of adoption, or team learning curve, and propose mitigation strategies.
 
 ---
 
 ## **Process**
 1. You have **15 minutes** to:
-   - Research and gather information about current limitations and alternative solutions.
-   - Analyze trade-offs and feasibility for our system.
+   - Analyze the strengths and weaknesses of the current approach.
+   - Research and identify alternative communication methods.
+   - Evaluate and compare the alternatives, focusing on performance, scalability, and reliability.
 
-2. Present your findings and recommendation in a **5-minute discussion**:
-   - Concisely summarize the current challenges.
-   - Compare alternatives with a focus on performance, scalability, and reliability.
-   - Provide a high-level implementation plan with risk mitigation strategies.
+2. Present your findings and recommendation in a **10-minute discussion**:
+   - Summarize the challenges with the current approach.
+   - Present alternative options with their benefits and trade-offs.
+   - Recommend the most suitable solution and provide a high-level implementation plan with risk mitigation.
 
-Feel free to ask clarifying questions at any point in the process.
+Feel free to ask clarifying questions at any point during the process.
