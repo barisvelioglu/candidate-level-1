@@ -13,6 +13,9 @@ This is a simple sensor simulator application that generates realistic sensor da
 - Includes health check endpoint
 - Configurable simulator ID and port via environment variables
 - Support for running multiple simulator instances
+- Simulates realistic sensor failures:
+  - 10% chance of individual sensor failure (null values)
+  - 5% chance of system-wide failure (500 errors)
 - Docker support for easy deployment
 
 ## Environment Variables
@@ -42,10 +45,17 @@ Response example:
    ```
    POST /temperature
    ```
-   Response example:
+   Success response example:
    ```json
    {
      "value": "23.45",
+     "unit": "°C"
+   }
+   ```
+   Sensor failure response example:
+   ```json
+   {
+     "value": null,
      "unit": "°C"
    }
    ```
@@ -54,10 +64,17 @@ Response example:
    ```
    POST /humidity
    ```
-   Response example:
+   Success response example:
    ```json
    {
      "value": "45.67",
+     "unit": "%"
+   }
+   ```
+   Sensor failure response example:
+   ```json
+   {
+     "value": null,
      "unit": "%"
    }
    ```
@@ -66,10 +83,17 @@ Response example:
    ```
    POST /vibration
    ```
-   Response example:
+   Success response example:
    ```json
    {
      "value": "2.34",
+     "unit": "mm/s"
+   }
+   ```
+   Sensor failure response example:
+   ```json
+   {
+     "value": null,
      "unit": "mm/s"
    }
    ```
@@ -79,13 +103,15 @@ Response example:
 ```
 GET /health
 ```
-Response example:
+Success response example:
 ```json
 {
   "status": "healthy",
   "timestamp": "2024-03-14T12:34:56Z"
 }
 ```
+
+Note: All endpoints may return a 500 Internal Server Error during system-wide failures (5% probability).
 
 ## Running the Application
 
@@ -121,16 +147,16 @@ You can use curl to test the endpoints:
 # Get simulator information
 curl http://localhost:8080/info
 
-# Get temperature data
+# Get temperature data (may return null or 500 error)
 curl -X POST http://localhost:8080/temperature
 
-# Get humidity data
+# Get humidity data (may return null or 500 error)
 curl -X POST http://localhost:8080/humidity
 
-# Get vibration data
+# Get vibration data (may return null or 500 error)
 curl -X POST http://localhost:8080/vibration
 
-# Check health status
+# Check health status (may return 500 error)
 curl http://localhost:8080/health
 
 # Test second simulator instance
