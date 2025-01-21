@@ -11,8 +11,8 @@ import (
 )
 
 type SensorData struct {
-	Value string `json:"value"`
-	Unit  string `json:"unit"`
+	Value *string `json:"value"`
+	Unit  string  `json:"unit"`
 }
 
 type HealthResponse struct {
@@ -28,11 +28,17 @@ type SimulatorInfo struct {
 }
 
 var (
-	temperature float64
-	humidity    float64
-	vibration   float64
-	simulatorID string
-	startTime   time.Time
+	temperature   *float64
+	humidity      *float64
+	vibration     *float64
+	simulatorID   string
+	startTime     time.Time
+	isSystemError bool
+)
+
+const (
+	sensorFailureProb = 0.1  // 10% chance of sensor failure
+	systemFailureProb = 0.05 // 5% chance of system failure
 )
 
 func init() {
@@ -46,12 +52,32 @@ func init() {
 
 func updateSensorData() {
 	for {
-		// Temperature: 18-30°C
-		temperature = 18 + rand.Float64()*12
-		// Humidity: 30-70%
-		humidity = 30 + rand.Float64()*40
-		// Vibration: 0-5 mm/s
-		vibration = rand.Float64() * 5
+		// Simulate system-wide failure
+		isSystemError = rand.Float64() < systemFailureProb
+
+		// Update temperature with possible failure
+		if rand.Float64() >= sensorFailureProb {
+			temp := 18 + rand.Float64()*12
+			temperature = &temp
+		} else {
+			temperature = nil
+		}
+
+		// Update humidity with possible failure
+		if rand.Float64() >= sensorFailureProb {
+			hum := 30 + rand.Float64()*40
+			humidity = &hum
+		} else {
+			humidity = nil
+		}
+
+		// Update vibration with possible failure
+		if rand.Float64() >= sensorFailureProb {
+			vib := rand.Float64() * 5
+			vibration = &vib
+		} else {
+			vibration = nil
+		}
 
 		time.Sleep(time.Second)
 	}
@@ -65,11 +91,24 @@ func getPort() string {
 	return port
 }
 
+func handleSystemError(w http.ResponseWriter) bool {
+	if isSystemError {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return true
+	}
+	return false
+}
+
 func infoHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	if handleSystemError(w) {
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	info := SimulatorInfo{
 		ID:          simulatorID,
@@ -85,9 +124,19 @@ func temperatureHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	if handleSystemError(w) {
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
+	var value *string
+	if temperature != nil {
+		strVal := fmt.Sprintf("%.2f", *temperature)
+		value = &strVal
+	}
 	data := SensorData{
-		Value: fmt.Sprintf("%.2f", temperature),
+		Value: value,
 		Unit:  "°C",
 	}
 	json.NewEncoder(w).Encode(data)
@@ -98,9 +147,19 @@ func humidityHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	if handleSystemError(w) {
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
+	var value *string
+	if humidity != nil {
+		strVal := fmt.Sprintf("%.2f", *humidity)
+		value = &strVal
+	}
 	data := SensorData{
-		Value: fmt.Sprintf("%.2f", humidity),
+		Value: value,
 		Unit:  "%",
 	}
 	json.NewEncoder(w).Encode(data)
@@ -111,9 +170,19 @@ func vibrationHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	if handleSystemError(w) {
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
+	var value *string
+	if vibration != nil {
+		strVal := fmt.Sprintf("%.2f", *vibration)
+		value = &strVal
+	}
 	data := SensorData{
-		Value: fmt.Sprintf("%.2f", vibration),
+		Value: value,
 		Unit:  "mm/s",
 	}
 	json.NewEncoder(w).Encode(data)
@@ -124,6 +193,11 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	if handleSystemError(w) {
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	response := HealthResponse{
 		Status:    "healthy",
